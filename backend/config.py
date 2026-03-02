@@ -17,10 +17,14 @@ class Settings:
     ]
 
     def __init__(self):
-        # Agregar URL de frontend en producción (ej: https://artecafexa.vercel.app)
+        # Agregar URLs de frontend en producción
         frontend_url = os.getenv("FRONTEND_URL", "")
         if frontend_url:
-            self.CORS_ORIGINS.append(frontend_url)
+            # Soportar múltiples URLs separadas por coma
+            for url in frontend_url.split(","):
+                url = url.strip()
+                if url:
+                    self.CORS_ORIGINS.append(url)
 
 
 settings = Settings()
