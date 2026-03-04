@@ -158,14 +158,38 @@ export async function getMe(): Promise<{ id: string; email: string } | null> {
 // ── Public fetchers (POS) ───────────────────────────────
 
 export async function fetchProducts(): Promise<Product[]> {
-  const response = await fetch(`${API_BASE_URL}/api/menu`)
-  if (!response.ok) throw new Error('Error al cargar productos')
+  let response: Response
+  try {
+    response = await fetch(`${API_BASE_URL}/api/menu`)
+  } catch (err) {
+    throw new Error(`No se pudo conectar al servidor (${API_BASE_URL}). Verifica que el backend esté corriendo.`)
+  }
+  if (!response.ok) {
+    let detail = `HTTP ${response.status}`
+    try {
+      const body = await response.json()
+      detail = body.detail || detail
+    } catch {}
+    throw new Error(`Error al cargar productos: ${detail}`)
+  }
   return response.json()
 }
 
 export async function fetchInventory(): Promise<InventoryResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/inventario`)
-  if (!response.ok) throw new Error('Error al cargar inventario')
+  let response: Response
+  try {
+    response = await fetch(`${API_BASE_URL}/api/inventario`)
+  } catch (err) {
+    throw new Error(`No se pudo conectar al servidor (${API_BASE_URL}). Verifica que el backend esté corriendo.`)
+  }
+  if (!response.ok) {
+    let detail = `HTTP ${response.status}`
+    try {
+      const body = await response.json()
+      detail = body.detail || detail
+    } catch {}
+    throw new Error(`Error al cargar inventario: ${detail}`)
+  }
   return response.json()
 }
 

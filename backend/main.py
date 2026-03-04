@@ -147,16 +147,30 @@ def get_menu():
         products: List[ProductoOut] = []
         for row in data:
             receta_raw = row.get("receta") or []
+            # Handle case where receta comes as JSON string
+            if isinstance(receta_raw, str):
+                try:
+                    receta_raw = json.loads(receta_raw)
+                except (json.JSONDecodeError, TypeError):
+                    receta_raw = []
             receta = [RecetaItem(**r) for r in receta_raw]
+            # Use explicit None checks (not `or`) to avoid treating 0.0 as falsy
+            precio = row.get("precio_venta")
+            if precio is None:
+                precio = row.get("precio")
+            if precio is None:
+                precio = 0.0
             products.append(ProductoOut(
                 id=row.get("producto_id") or row.get("id"),
                 nombre=row.get("producto_nombre") or row.get("nombre"),
-                precio=row.get("precio_venta") or row.get("precio"),
+                precio=float(precio),
                 icono=row.get("icono") or "coffee",
                 receta=receta,
             ))
         return products
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error menú: {e}")
 
 

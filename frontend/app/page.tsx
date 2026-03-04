@@ -71,6 +71,7 @@ export default function POSPage() {
         <div className="text-center">
           <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
           <p className="text-red-600 font-semibold mb-2">Error al cargar productos</p>
+          <p className="text-red-400 text-sm mb-4 max-w-md mx-auto">{error.message}</p>
           <button onClick={() => mutate()}
             className="mt-4 px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
             Reintentar
