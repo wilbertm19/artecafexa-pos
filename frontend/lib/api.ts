@@ -1,5 +1,10 @@
-// API Base URL
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+// API Base URL - Railway en producción, localhost solo en desarrollo local
+const RAILWAY_URL = 'https://artecafexa-pos-production.up.railway.app'
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  (typeof window !== 'undefined' && window.location.hostname !== 'localhost'
+    ? RAILWAY_URL
+    : 'http://localhost:8000')
 
 // ── Auth helpers ────────────────────────────────────────
 export function getToken(): string | null {
