@@ -140,32 +140,40 @@ def get_inventario():
 
 @app.get("/api/menu", response_model=List[ProductoOut])
 def get_menu():
-    """Menú de productos con recetas."""
+    """Menú de productos con recetas (incluye productos sin receta)."""
     try:
         sb = get_supabase()
-        data = sb.table("vista_menu").select("*").execute().data
+        productos = sb.table("productos").select("id,nombre,precio_venta,icono").order("nombre").execute().data or []
+        recetas_rows = sb.table("recetas").select("producto_id,insumo_id,cantidad_consumida").execute().data or []
+        insumos_rows = sb.table("insumos").select("id,nombre").execute().data or []
+
+        insumo_nombre_by_id = {row["id"]: row["nombre"] for row in insumos_rows if row.get("id")}
+        recetas_by_producto: dict[str, list[RecetaItem]] = {}
+
+        for row in recetas_rows:
+            producto_id = row.get("producto_id")
+            insumo_id = row.get("insumo_id")
+            if not producto_id or not insumo_id:
+                continue
+            recetas_by_producto.setdefault(producto_id, []).append(
+                RecetaItem(
+                    insumo_id=insumo_id,
+                    insumo=insumo_nombre_by_id.get(insumo_id, "Insumo"),
+                    cantidad=float(row.get("cantidad_consumida") or 0),
+                )
+            )
+
         products: List[ProductoOut] = []
-        for row in data:
-            receta_raw = row.get("receta") or []
-            # Handle case where receta comes as JSON string
-            if isinstance(receta_raw, str):
-                try:
-                    receta_raw = json.loads(receta_raw)
-                except (json.JSONDecodeError, TypeError):
-                    receta_raw = []
-            receta = [RecetaItem(**r) for r in receta_raw]
-            # Use explicit None checks (not `or`) to avoid treating 0.0 as falsy
+        for row in productos:
             precio = row.get("precio_venta")
-            if precio is None:
-                precio = row.get("precio")
             if precio is None:
                 precio = 0.0
             products.append(ProductoOut(
-                id=row.get("producto_id") or row.get("id"),
-                nombre=row.get("producto_nombre") or row.get("nombre"),
+                id=row.get("id"),
+                nombre=row.get("nombre"),
                 precio=float(precio),
                 icono=row.get("icono") or "coffee",
-                receta=receta,
+                receta=recetas_by_producto.get(row.get("id"), []),
             ))
         return products
     except Exception as e:
